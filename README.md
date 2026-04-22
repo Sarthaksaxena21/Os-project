@@ -7,4 +7,4 @@ Thermal-aware scheduling
 Workload prediction
 Heterogeneous core utilization (big + little cores)
 
-The system is implemented in C++ and evaluated using simulation, with results visualized using Python .
+The system is implemented in C++ and evaluated using simulation, with results visualized using Python.
