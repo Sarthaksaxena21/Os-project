@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@300;400;600;700&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f14;--bg2:#131720;--bg3:#1a2030;--bg4:#1f2840;
+  --border:#2a3550;--border2:#3a4a6a;
+  --text:#c8d8f0;--text2:#7890b8;--text3:#4a5e80;
+  --blue:#4a9eff;--blue2:#1a5abf;--green:#2ecc8a;--green2:#0f7a4a;
+  --amber:#f5a623;--amber2:#8a5a00;--red:#ff5a5a;--red2:#8a1a1a;
+  --purple:#9b6fff;--cyan:#00d4ff;
+  --core-p:#4a9eff;--core-e:#2ecc8a;
+  --font-mono:'JetBrains Mono',monospace;--font-main:'Sora',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font-main);font-size:13px;overflow-x:hidden}
+
+/* Layout */
+.shell{display:grid;grid-template-rows:48px 1fr;height:100vh;min-height:600px}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 16px}
+.topbar-logo{font-size:14px;font-weight:700;color:var(--blue);font-family:var(--font-mono);letter-spacing:-0.5px}
+.topbar-tag{font-size:10px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 7px;color:var(--text2)}
+.topbar-spacer{flex:1}
+.topbar-stat{text-align:right;line-height:1.3}
+.topbar-stat span{font-size:11px;color:var(--text2);display:block}
+.topbar-stat b{font-family:var(--font-mono);font-size:13px;color:var(--green)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+.main{display:grid;grid-template-columns:200px 1fr 220px;height:100%;overflow:hidden}
+
+/* Sidebar */
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:12px 0;overflow-y:auto}
+.sidebar-section{padding:6px 14px 4px;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-top:8px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 14px;cursor:pointer;border-left:2px solid transparent;transition:all .18s;color:var(--text2);font-size:12px}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:var(--bg4);border-left-color:var(--blue);color:var(--blue)}
+.nav-icon{width:14px;height:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+
+/* Main content */
+.content{overflow-y:auto;padding:14px;background:var(--bg)}
+.page{display:none}.page.active{display:block}
+
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px}
+.card-title{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.card-title::before{content:'';width:3px;height:12px;border-radius:2px;background:var(--blue)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
+
+/* KPI cards */
+.kpi{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:10px 12px}
+.kpi-label{font-size:10px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.kpi-val{font-family:var(--font-mono);font-size:20px;font-weight:700;line-height:1}
+.kpi-sub{font-size:10px;color:var(--text2);margin-top:3px}
+.kpi.blue .kpi-val{color:var(--blue)}
+.kpi.green .kpi-val{color:var(--green)}
+.kpi.amber .kpi-val{color:var(--amber)}
+.kpi.red .kpi-val{color:var(--red)}
+.kpi.purple .kpi-val{color:var(--purple)}
+.kpi.cyan .kpi-val{color:var(--cyan)}
+
+/* Core tiles */
+.core-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.core-tile{border-radius:7px;padding:9px;border:1px solid var(--border);transition:all .2s;cursor:pointer;position:relative;overflow:hidden}
+.core-tile:hover{border-color:var(--border2)}
+.core-tile.perf{background:linear-gradient(135deg,#0d1a30,#0a2248)}
+.core-tile.eff{background:linear-gradient(135deg,#0a2018,#0a2a1a)}
+.core-tile-label{font-size:9px;text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px;display:flex;align-items:center;gap:4px}
+.core-tile.perf .core-tile-label{color:var(--blue)}
+.core-tile.eff .core-tile-label{color:var(--green)}
+.core-tile-freq{font-family:var(--font-mono);font-size:18px;font-weight:700;line-height:1}
+.core-tile.perf .core-tile-freq{color:var(--blue)}
+.core-tile.eff .core-tile-freq{color:var(--green)}
+.core-tile-sub{font-size:10px;color:var(--text2);margin-top:3px}
+.core-bar-bg{height:4px;background:var(--bg3);border-radius:2px;margin-top:6px;overflow:hidden}
+.core-bar{height:4px;border-radius:2px;transition:width .5s ease}
+.core-tile.perf .core-bar{background:var(--blue)}
+.core-tile.eff .core-bar{background:var(--green)}
+.core-badge{position:absolute;top:7px;right:7px;font-size:8px;padding:2px 5px;border-radius:3px}
+.badge-active{background:rgba(46,204,138,.15);color:var(--green);border:1px solid rgba(46,204,138,.3)}
+.badge-idle{background:rgba(42,53,80,.5);color:var(--text3);border:1px solid var(--border)}
+.badge-hot{background:rgba(255,90,90,.15);color:var(--red);border:1px solid rgba(255,90,90,.3)}
+
+/* Task queue */
+.task-row{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;margin-bottom:4px;border:1px solid var(--border);background:var(--bg3);transition:all .2s}
+.task-row:hover{border-color:var(--border2)}
+.task-type{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.task-name{flex:1;font-size:12px}
+.task-core{font-size:10px;font-family:var(--font-mono);color:var(--text2)}
+.task-pri{font-size:9px;padding:2px 6px;border-radius:3px}
+.pri-high{background:rgba(255,90,90,.15);color:var(--red)}
+.pri-med{background:rgba(245,166,35,.15);color:var(--amber)}
+.pri-low{background:rgba(46,204,138,.15);color:var(--green)}
+.task-bar-wrap{width:60px;height:6px;background:var(--bg);border-radius:3px;overflow:hidden}
+.task-bar{height:6px;border-radius:3px}
+
+/* Charts */
+.chart-area{height:80px;position:relative;margin-top:6px}
+.chart-svg{width:100%;height:100%}
+
+/* DVFS */
+.dvfs-core{margin-bottom:10px}
+.dvfs-label{display:flex;justify-content:space-between;margin-bottom:5px;font-size:11px}
+.dvfs-track{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.dvfs-fill{height:8px;border-radius:4px;transition:width .6s ease}
+.freq-slider{width:100%;accent-color:var(--blue);margin-top:6px}
+
+/* Thermal map */
+.thermal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:8px}
+.thermal-cell{border-radius:6px;padding:8px;text-align:center;font-family:var(--font-mono)}
+.thermal-temp{font-size:16px;font-weight:700}
+.thermal-label{font-size:9px;margin-top:2px;opacity:.7}
+
+/* Log */
+.log-area{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;height:140px;overflow-y:auto;font-family:var(--font-mono);font-size:11px}
+.log-entry{margin-bottom:2px;display:flex;gap:8px}
+.log-time{color:var(--text3);flex-shrink:0}
+.log-info{color:var(--blue)}
+.log-warn{color:var(--amber)}
+.log-ok{color:var(--green)}
+
+/* Controls */
+.ctrl-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.btn{padding:5px 12px;border-radius:5px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:11px;cursor:pointer;font-family:var(--font-main);transition:all .15s}
+.btn:hover{background:var(--bg4);border-color:var(--border2)}
+.btn.primary{background:var(--blue2);border-color:var(--blue);color:#fff}
+.btn.primary:hover{background:#1e6ad0}
+.btn.danger{background:rgba(255,90,90,.1);border-color:rgba(255,90,90,.4);color:var(--red)}
+.slider-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.slider-label{font-size:11px;color:var(--text2);width:90px;flex-shrink:0}
+.slider-val{font-family:var(--font-mono);font-size:11px;width:40px;text-align:right;flex-shrink:0;color:var(--text)}
+.range-full{flex:1;accent-color:var(--blue)}
+
+/* Energy chart */
+.energy-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.energy-bar-label{font-size:11px;color:var(--text2);width:70px;flex-shrink:0}
+.energy-bar-track{flex:1;height:14px;background:var(--bg3);border-radius:3px;overflow:hidden;border:1px solid var(--border)}
+.energy-bar-fill{height:14px;border-radius:3px;transition:width .7s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:5px}
+.energy-bar-num{font-family:var(--font-mono);font-size:9px;font-weight:700;color:#fff}
+
+/* Right panel */
+.rpanel{background:var(--bg2);border-left:1px solid var(--border);padding:12px;overflow-y:auto}
+.rp-section{margin-bottom:16px}
+.rp-title{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px}
+.metric-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;padding:5px 0;border-bottom:1px solid var(--border)}
+.metric-row:last-child{border-bottom:none}
+.metric-key{font-size:11px;color:var(--text2)}
+.metric-val{font-family:var(--font-mono);font-size:12px;font-weight:600}
+.gauge-wrap{position:relative;text-align:center;margin-bottom:8px}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;margin-bottom:12px}
+.tab{padding:5px 12px;border-radius:5px;cursor:pointer;font-size:11px;color:var(--text2);border:1px solid transparent;transition:all .15s}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--bg3);border-color:var(--border);color:var(--text)}
+
+/* Animate */
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.page.active{animation:fadeIn .2s ease}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="topbar-logo">⚡ PowerSched OS</div>
+  <span class="topbar-tag">DVFS + Thermal-Aware</span>
+  <div class="status-dot" style="margin-left:8px"></div>
+  <span style="font-size:11px;color:var(--green)">Running</span>
+  <div class="topbar-spacer"></div>
+  <div class="topbar-stat"><span>System Power</span><b id="sys-power">2.4W</b></div>
+  <div style="width:1px;height:28px;background:var(--border);margin:0 10px"></div>
+  <div class="topbar-stat"><span>Uptime</span><b id="uptime">00:04:32</b></div>
+  <div style="width:1px;height:28px;background:var(--border);margin:0 10px"></div>
+  <div class="topbar-stat"><span>Tasks</span><b id="task-count" style="color:var(--amber)">12</b></div>
+</div>
+
+<div class="main">
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sidebar-section">Overview</div>
+  <div class="nav-item active" onclick="showPage('dashboard',this)">
+    <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor"/><rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor"/><rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor"/><rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor"/></svg></div>
+    Dashboard
+  </div>
+  <div class="nav-item" onclick="showPage('cores',this)">
+    <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><circle cx="7" cy="7" r="2" fill="currentColor"/></svg></div>
+    Core Manager
+  </div>
+  <div class="sidebar-section">Algorithms</div>
+  <div class="nav-item" onclick="showPage('dvfs',this)">
+    <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 10L5 6l3 2 4-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+    DVFS Control
+  </div>
+  <div class="nav-item" onclick="showPage('thermal',this)">
+    <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v6M7 12a3 3 0 100-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="7" cy="10" r="2" fill="currentColor" opacity=".4"/></svg></div>
+    Thermal Monitor
+  </div>
+  <div class="nav-item" onclick="showPage('scheduler',this)">
+    <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="2" rx="1" fill="currentColor"/><rect x="1" y="6.5" width="8" height="2" rx="1" fill="currentColor"/><rect x="1" y="10" width="10" height="2" rx="1" fill="currentColor"/></svg></div>
+    Task Scheduler
+  </div>
+  <div class="sidebar-section">Analysis</div>
+  <div class="nav-item" onclick="showPage('energy',this)">
+    <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M8 1L4 8h5l-3 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    Energy Analysis
+  </div>
+  <div class="nav-item" onclick="showPage('predict',this)">
+    <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="M7 4v3l2 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+    Workload Predictor
+  </div>
+  <div class="nav-item" onclick="showPage('logs',this)">
+    <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="2" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h4M5 7h4M5 9h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+    System Logs
+  </div>
+  <div style="margin-top:16px;padding:0 10px">
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:10px;text-align:center">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:6px">Energy Saved Today</div>
+      <div style="font-family:var(--font-mono);font-size:20px;font-weight:700;color:var(--green)" id="energy-saved">1.24 Wh</div>
+      <div style="font-size:9px;color:var(--green);margin-top:3px">↓ 31% vs baseline</div>
+    </div>
+  </div>
+</div>
+
+<!-- Content -->
+<div class="content">
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:12px">
+    <div class="kpi blue"><div class="kpi-label">Avg Frequency</div><div class="kpi-val" id="kpi-freq">1.8<span style="font-size:12px">GHz</span></div><div class="kpi-sub">↓ from 2.4 GHz</div></div>
+    <div class="kpi green"><div class="kpi-label">Total Power</div><div class="kpi-val" id="kpi-power">2.4<span style="font-size:12px">W</span></div><div class="kpi-sub">Budget: 8W</div></div>
+    <div class="kpi amber"><div class="kpi-label">Avg Temp</div><div class="kpi-val" id="kpi-temp">52<span style="font-size:12px">°C</span></div><div class="kpi-sub">Limit: 85°C</div></div>
+    <div class="kpi purple"><div class="kpi-label">Active Tasks</div><div class="kpi-val" id="kpi-tasks">12</div><div class="kpi-sub">4 on P-cores</div></div>
+    <div class="kpi cyan"><div class="kpi-label">P-Core Load</div><div class="kpi-val" id="kpi-pload">68<span style="font-size:12px">%</span></div><div class="kpi-sub">4 × Big cores</div></div>
+    <div class="kpi red"><div class="kpi-label">E-Core Load</div><div class="kpi-val" id="kpi-eload">34<span style="font-size:12px">%</span></div><div class="kpi-sub">4 × Eff cores</div></div>
+  </div>
+  <div class="grid2" style="margin-bottom:10px">
+    <div class="card">
+      <div class="card-title">CPU Core Overview</div>
+      <div class="core-grid" id="core-grid"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Live Power Trace</div>
+      <div class="chart-area"><canvas id="power-chart" width="400" height="80"></canvas></div>
+      <div style="margin-top:8px">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2)">
+          <span>P-Cores: <b style="color:var(--blue)" id="pcore-w">1.8W</b></span>
+          <span>E-Cores: <b style="color:var(--green)" id="ecore-w">0.6W</b></span>
+          <span>Total: <b style="color:var(--amber)" id="total-w">2.4W</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Task Queue (Top 6)</div>
+      <div id="task-list"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Scheduler Decision Log</div>
+      <div class="log-area" id="dashboard-log"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CORE MANAGER -->
+<div class="page" id="page-cores">
+  <div class="card" style="margin-bottom:10px">
+    <div class="card-title">Heterogeneous Core Configuration</div>
+    <div class="ctrl-row">
+      <button class="btn primary" onclick="redistributeTasks()">↻ Redistribute Tasks</button>
+      <button class="btn" onclick="toggleAllCores()">Toggle All Cores</button>
+      <button class="btn danger" onclick="throttleHotCores()">🌡 Throttle Hot Cores</button>
+    </div>
+    <div id="detailed-core-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Core Assignment Policy</div>
+    <div class="slider-row"><span class="slider-label">P-Core Threshold</span><input type="range" class="range-full" min="20" max="90" value="60" id="pcoreThresh" oninput="updatePolicy()"><span class="slider-val" id="pcoreThreshVal">60%</span></div>
+    <div class="slider-row"><span class="slider-label">Migration Cost</span><input type="range" class="range-full" min="1" max="100" value="30" id="migCost" oninput="updatePolicy()"><span class="slider-val" id="migCostVal">30ms</span></div>
+    <div class="slider-row"><span class="slider-label">Load Balance Δ</span><input type="range" class="range-full" min="5" max="50" value="15" id="lbDelta" oninput="updatePolicy()"><span class="slider-val" id="lbDeltaVal">15%</span></div>
+    <div style="font-size:11px;color:var(--text2);margin-top:8px;padding:8px;background:var(--bg3);border-radius:5px;border:1px solid var(--border)">
+      Policy: Tasks with predicted load &gt; <b id="policy-thresh" style="color:var(--blue)">60%</b> → P-Core (max perf). Others → E-Core (min power). Migration triggers when imbalance &gt; <b id="policy-delta" style="color:var(--green)">15%</b>.
+    </div>
+  </div>
+</div>
+
+<!-- DVFS -->
+<div class="page" id="page-dvfs">
+  <div class="card" style="margin-bottom:10px">
+    <div class="card-title">Dynamic Voltage & Frequency Scaling</div>
+    <div class="ctrl-row">
+      <button class="btn primary" onclick="autoScale()">⚡ Auto-Scale Now</button>
+      <button class="btn" onclick="setDVFSMode('perf')">Performance Mode</button>
+      <button class="btn" onclick="setDVFSMode('balance')">Balanced Mode</button>
+      <button class="btn" onclick="setDVFSMode('saver')">Power Saver</button>
+    </div>
+    <div id="dvfs-cores"></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Voltage-Frequency Curve</div>
+      <canvas id="vf-chart" width="300" height="130"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-title">DVFS Governor</div>
+      <div style="margin-bottom:8px">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Active Governor</div>
+        <select id="governor-select" onchange="changeGovernor()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:5px 8px;font-size:12px">
+          <option value="ondemand">Ondemand (Workload-aware)</option>
+          <option value="conservative">Conservative (Gradual step)</option>
+          <option value="performance">Performance (Max freq)</option>
+          <option value="powersave">Powersave (Min freq)</option>
+          <option value="schedutil">Schedutil (Scheduler-driven)</option>
+        </select>
+      </div>
+      <div class="metric-row"><span class="metric-key">Sampling Rate</span><span class="metric-val" style="color:var(--blue)" id="gov-sample">10 ms</span></div>
+      <div class="metric-row"><span class="metric-key">Up Threshold</span><span class="metric-val" style="color:var(--amber)" id="gov-up">80%</span></div>
+      <div class="metric-row"><span class="metric-key">Down Threshold</span><span class="metric-val" style="color:var(--green)" id="gov-down">20%</span></div>
+      <div class="metric-row"><span class="metric-key">Freq Steps</span><span class="metric-val" id="gov-steps">8</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- THERMAL -->
+<div class="page" id="page-thermal">
+  <div class="grid2" style="margin-bottom:10px">
+    <div class="card">
+      <div class="card-title">Thermal Heatmap</div>
+      <div class="thermal-grid" id="thermal-grid"></div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text2)">
+        <span>Cool</span>
+        <div style="flex:1;height:6px;border-radius:3px;background:linear-gradient(to right,#0f7a4a,#f5a623,#ff5a5a)"></div>
+        <span>Hot</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Temperature Trend</div>
+      <canvas id="temp-chart" width="300" height="120"></canvas>
+      <div style="display:flex;gap:12px;margin-top:6px;font-size:10px">
+        <span style="color:var(--blue)">● P0</span><span style="color:var(--green)">● E0</span>
+        <span style="color:var(--amber)">● P1</span><span style="color:var(--red)">● E1</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Thermal Management Policy</div>
+    <div class="grid3">
+      <div>
+        <div class="slider-row"><span class="slider-label">Warn Threshold</span><input type="range" class="range-full" min="50" max="85" value="75" id="warnTemp" oninput="updateThermal()"><span class="slider-val" id="warnTempVal">75°C</span></div>
+        <div class="slider-row"><span class="slider-label">Throttle Point</span><input type="range" class="range-full" min="70" max="90" value="82" id="throttleTemp" oninput="updateThermal()"><span class="slider-val" id="throttleTempVal">82°C</span></div>
+      </div>
+      <div>
+        <div class="slider-row"><span class="slider-label">Emergency Cut</span><input type="range" class="range-full" min="85" max="100" value="90" id="emerTemp" oninput="updateThermal()"><span class="slider-val" id="emerTempVal">90°C</span></div>
+        <div class="slider-row"><span class="slider-label">Cooling Bias</span><input type="range" class="range-full" min="0" max="100" value="40" id="coolingBias" oninput="updateThermal()"><span class="slider-val" id="coolingBiasVal">40%</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="padding:7px;background:var(--bg3);border-radius:5px;border:1px solid var(--border)">
+          <div style="font-size:9px;color:var(--text3)">THROTTLING STATUS</div>
+          <div style="font-size:12px;color:var(--green);font-weight:600;margin-top:2px" id="throttle-status">None active</div>
+        </div>
+        <div style="padding:7px;background:var(--bg3);border-radius:5px;border:1px solid var(--border)">
+          <div style="font-size:9px;color:var(--text3)">MIGRATIONS TODAY</div>
+          <div style="font-family:var(--font-mono);font-size:14px;color:var(--amber);font-weight:700;margin-top:2px" id="migrations-count">18</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCHEDULER -->
+<div class="page" id="page-scheduler">
+  <div class="tabs">
+    <div class="tab active" onclick="schedTab(this,'queue')">Task Queue</div>
+    <div class="tab" onclick="schedTab(this,'gantt')">Gantt Chart</div>
+    <div class="tab" onclick="schedTab(this,'algo')">Algorithm</div>
+  </div>
+  <div id="sched-queue">
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-title">Active Task Queue</div>
+      <div class="ctrl-row">
+        <button class="btn primary" onclick="addTask()">+ Add Task</button>
+        <button class="btn" onclick="sortTasks()">Sort by Priority</button>
+        <button class="btn danger" onclick="clearTasks()">Clear All</button>
+      </div>
+      <div id="full-task-list"></div>
+    </div>
+  </div>
+  <div id="sched-gantt" style="display:none">
+    <div class="card">
+      <div class="card-title">Gantt Timeline (Last 20 Slots)</div>
+      <canvas id="gantt-chart" width="600" height="160"></canvas>
+    </div>
+  </div>
+  <div id="sched-algo" style="display:none">
+    <div class="card">
+      <div class="card-title">Scheduling Algorithm: Power-Aware Priority Queue</div>
+      <div style="font-size:12px;line-height:1.7;color:var(--text2)">
+        <p style="margin-bottom:8px">The scheduler uses a <b style="color:var(--blue)">multi-level priority queue</b> with power awareness at each decision step:</p>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px;font-family:var(--font-mono);font-size:11px;color:var(--green)">
+          PRIORITY_SCORE = (deadline_urgency × 0.4) + (workload_weight × 0.3) + (thermal_penalty × 0.2) + (fairness_bonus × 0.1)
+        </div>
+        <p style="margin-bottom:6px">• <b style="color:var(--cyan)">Workload Prediction:</b> EWMA of last 8 CPU bursts → classify Light / Medium / Heavy</p>
+        <p style="margin-bottom:6px">• <b style="color:var(--amber)">Core Selection:</b> Heavy → P-Core (Big), Light → E-Core (Little), with thermal migration override</p>
+        <p style="margin-bottom:6px">• <b style="color:var(--purple)">DVFS Step:</b> freq = f_min + (predicted_load / 100) × (f_max – f_min), rounded to nearest OPP</p>
+        <p>• <b style="color:var(--red)">Thermal Guard:</b> If T_core &gt; T_warn, force migration + freq step-down before scheduling</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ENERGY -->
+<div class="page" id="page-energy">
+  <div class="grid2" style="margin-bottom:10px">
+    <div class="card">
+      <div class="card-title">Power Breakdown by Core Type</div>
+      <div id="energy-breakdown" style="margin-top:6px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Cumulative Energy (mWh)</div>
+      <canvas id="energy-chart" width="300" height="130"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Energy Optimization Knobs</div>
+    <div class="grid3">
+      <div>
+        <div class="slider-row"><span class="slider-label">Race-to-Idle</span><input type="range" class="range-full" min="0" max="100" value="65" id="rti" oninput="updateEnergy()"><span class="slider-val" id="rtiVal">65%</span></div>
+        <div class="slider-row"><span class="slider-label">C-State Depth</span><input type="range" class="range-full" min="0" max="6" value="3" id="cstate" oninput="updateEnergy()"><span class="slider-val" id="cstateVal">C3</span></div>
+      </div>
+      <div>
+        <div class="slider-row"><span class="slider-label">Idle Timeout</span><input type="range" class="range-full" min="1" max="50" value="10" id="idleTimeout" oninput="updateEnergy()"><span class="slider-val" id="idleTimeoutVal">10ms</span></div>
+        <div class="slider-row"><span class="slider-label">EE-Core Bias</span><input type="range" class="range-full" min="0" max="100" value="70" id="eeBias" oninput="updateEnergy()"><span class="slider-val" id="eeBiasVal">70%</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;align-content:start">
+        <div class="kpi green" style="padding:8px"><div class="kpi-label">Saved Today</div><div class="kpi-val" style="font-size:16px">1.24Wh</div></div>
+        <div class="kpi blue" style="padding:8px"><div class="kpi-label">Efficiency</div><div class="kpi-val" style="font-size:16px">78%</div></div>
+        <div class="kpi amber" style="padding:8px"><div class="kpi-label">Peak Power</div><div class="kpi-val" style="font-size:16px">4.8W</div></div>
+        <div class="kpi purple" style="padding:8px"><div class="kpi-label">Avg Power</div><div class="kpi-val" style="font-size:16px">2.4W</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PREDICTOR -->
+<div class="page" id="page-predict">
+  <div class="card" style="margin-bottom:10px">
+    <div class="card-title">Workload Prediction Engine</div>
+    <div class="ctrl-row">
+      <button class="btn primary" onclick="runPrediction()">▶ Run Prediction</button>
+      <button class="btn" onclick="trainModel()">⚙ Retrain Model</button>
+    </div>
+    <div class="grid2" style="margin-top:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:6px">Prediction Model</div>
+        <select id="pred-model" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:5px 8px;font-size:12px;margin-bottom:8px">
+          <option>EWMA (Exponentially Weighted Moving Avg)</option>
+          <option>Autoregressive (AR-4)</option>
+          <option>Linear Regression</option>
+          <option>Neural Network (LSTM)</option>
+        </select>
+        <div class="slider-row"><span class="slider-label">EWMA α factor</span><input type="range" class="range-full" min="1" max="99" value="25" id="ewmaAlpha" oninput="updatePredict()"><span class="slider-val" id="ewmaAlphaVal">0.25</span></div>
+        <div class="slider-row"><span class="slider-label">History Window</span><input type="range" class="range-full" min="2" max="16" value="8" id="histWin" oninput="updatePredict()"><span class="slider-val" id="histWinVal">8</span></div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:6px">Classification Thresholds</div>
+        <div class="slider-row"><span class="slider-label">Heavy &gt;</span><input type="range" class="range-full" min="40" max="90" value="70" id="heavyThresh" oninput="updatePredict()"><span class="slider-val" id="heavyThreshVal">70%</span></div>
+        <div class="slider-row"><span class="slider-label">Medium &gt;</span><input type="range" class="range-full" min="10" max="60" value="30" id="medThresh" oninput="updatePredict()"><span class="slider-val" id="medThreshVal">30%</span></div>
+        <div style="padding:8px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;font-size:11px">
+          <span style="color:var(--red)">■ Heavy</span> → P-Core + Max DVFS &nbsp;
+          <span style="color:var(--amber)">■ Medium</span> → P-Core + Mid DVFS &nbsp;
+          <span style="color:var(--green)">■ Light</span> → E-Core + Min DVFS
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Live Workload Prediction vs Actual</div>
+    <canvas id="predict-chart" width="600" height="130"></canvas>
+    <div style="margin-top:6px;display:flex;gap:12px;font-size:10px">
+      <span style="color:var(--blue)">● Actual Load</span>
+      <span style="color:var(--purple)">--- Predicted</span>
+      <span style="color:var(--green)">Accuracy: <b id="pred-accuracy">91.3%</b></span>
+    </div>
+  </div>
+</div>
+
+<!-- LOGS -->
+<div class="page" id="page-logs">
+  <div class="card" style="margin-bottom:10px">
+    <div class="card-title">System Event Log</div>
+    <div class="ctrl-row">
+      <button class="btn primary" onclick="clearLog()">Clear Log</button>
+      <button class="btn" onclick="exportLog()">Export</button>
+      <span style="font-size:11px;color:var(--text2);margin-left:auto;align-self:center">Filter:</span>
+      <select id="log-filter" onchange="filterLog()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:4px 7px;font-size:11px">
+        <option value="all">All Events</option>
+        <option value="info">Info</option>
+        <option value="warn">Warnings</option>
+        <option value="ok">Success</option>
+      </select>
+    </div>
+    <div class="log-area" id="full-log" style="height:340px"></div>
+  </div>
+</div>
+
+</div><!-- .content -->
+
+<!-- Right panel -->
+<div class="rpanel">
+  <div class="rp-section">
+    <div class="rp-title">System Health</div>
+    <canvas id="health-gauge" width="180" height="90"></canvas>
+    <div style="text-align:center;font-family:var(--font-mono);font-size:20px;font-weight:700;color:var(--green);margin-top:4px" id="health-score">87</div>
+    <div style="text-align:center;font-size:10px;color:var(--text2)">Health Score / 100</div>
+  </div>
+  <div class="rp-section">
+    <div class="rp-title">Live Metrics</div>
+    <div class="metric-row"><span class="metric-key">Freq P0</span><span class="metric-val" style="color:var(--blue)" id="rm-freq-p0">2.1 GHz</span></div>
+    <div class="metric-row"><span class="metric-key">Freq P1</span><span class="metric-val" style="color:var(--blue)" id="rm-freq-p1">1.8 GHz</span></div>
+    <div class="metric-row"><span class="metric-key">Freq E0</span><span class="metric-val" style="color:var(--green)" id="rm-freq-e0">0.9 GHz</span></div>
+    <div class="metric-row"><span class="metric-key">Freq E1</span><span class="metric-val" style="color:var(--green)" id="rm-freq-e1">1.2 GHz</span></div>
+    <div class="metric-row"><span class="metric-key">Voltage P</span><span class="metric-val" id="rm-vp">0.95 V</span></div>
+    <div class="metric-row"><span class="metric-key">Voltage E</span><span class="metric-val" id="rm-ve">0.75 V</span></div>
+    <div class="metric-row"><span class="metric-key">IPC (avg)</span><span class="metric-val" id="rm-ipc">1.82</span></div>
+    <div class="metric-row"><span class="metric-key">Cache Miss</span><span class="metric-val" style="color:var(--amber)" id="rm-cache">6.2%</span></div>
+  </div>
+  <div class="rp-section">
+    <div class="rp-title">Quick Actions</div>
+    <div style="display:flex;flex-direction:column;gap:5px">
+      <button class="btn primary" onclick="emergencyCool()" style="font-size:11px">🌡 Emergency Cool</button>
+      <button class="btn" onclick="boostPerf()" style="font-size:11px">⚡ Performance Boost</button>
+      <button class="btn" onclick="maxSave()" style="font-size:11px">🔋 Max Power Save</button>
+      <button class="btn danger" onclick="resetSched()" style="font-size:11px">↺ Reset Scheduler</button>
+    </div>
+  </div>
+  <div class="rp-section">
+    <div class="rp-title">Scheduler Mode</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+      <div style="padding:7px;background:var(--bg3);border:1px solid var(--blue);border-radius:5px;text-align:center;cursor:pointer" id="mode-btn" onclick="cycleMode()">
+        <div style="font-size:9px;color:var(--text3)">CURRENT</div>
+        <div style="font-size:12px;color:var(--blue);font-weight:600;margin-top:2px" id="current-mode">Balanced</div>
+      </div>
+      <div style="padding:7px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;text-align:center">
+        <div style="font-size:9px;color:var(--text3)">FAIRNESS</div>
+        <div style="font-size:12px;color:var(--green);font-weight:600;margin-top:2px" id="fairness-score">94%</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- .main -->
+</div><!-- .shell -->
+
+<script>
+// ---- State ----
+const cores=[
+  {id:'P0',type:'perf',label:'Big',freq:2.1,maxFreq:3.2,minFreq:0.8,load:72,temp:58,voltage:0.95,tasks:['Browser','ML Infer'],active:true},
+  {id:'P1',type:'perf',label:'Big',freq:1.8,maxFreq:3.2,minFreq:0.8,load:54,temp:52,voltage:0.88,tasks:['Video Enc'],active:true},
+  {id:'P2',type:'perf',label:'Big',freq:2.4,maxFreq:3.2,minFreq:0.8,load:81,temp:67,voltage:1.0,tasks:['Game','Compile'],active:true},
+  {id:'P3',type:'perf',label:'Big',freq:0.8,maxFreq:3.2,minFreq:0.8,load:12,temp:40,voltage:0.72,tasks:[],active:true},
+  {id:'E0',type:'eff',label:'Little',freq:0.9,maxFreq:2.0,minFreq:0.4,load:38,temp:44,voltage:0.75,tasks:['Email','Sync'],active:true},
+  {id:'E1',type:'eff',label:'Little',freq:1.2,maxFreq:2.0,minFreq:0.4,load:55,temp:48,voltage:0.8,tasks:['GPS','Sensor'],active:true},
+  {id:'E2',type:'eff',label:'Little',freq:0.4,maxFreq:2.0,minFreq:0.4,load:8,temp:36,voltage:0.65,tasks:[],active:true},
+  {id:'E3',type:'eff',label:'Little',freq:0.7,maxFreq:2.0,minFreq:0.4,load:22,temp:39,voltage:0.7,tasks:['Logger'],active:true},
+];
+const tasks=[
+  {name:'Browser Render',type:'perf',pri:'high',core:'P0',progress:68,color:'#4a9eff'},
+  {name:'ML Inference',type:'perf',pri:'high',core:'P0',progress:42,color:'#9b6fff'},
+  {name:'Video Encode',type:'perf',pri:'med',core:'P1',progress:85,color:'#f5a623'},
+  {name:'Game Physics',type:'perf',pri:'high',core:'P2',progress:30,color:'#ff5a5a'},
+  {name:'Compiler',type:'perf',pri:'med',core:'P2',progress:55,color:'#00d4ff'},
+  {name:'Email Sync',type:'eff',pri:'low',core:'E0',progress:90,color:'#2ecc8a'},
+  {name:'GPS Update',type:'eff',pri:'low',core:'E1',progress:20,color:'#2ecc8a'},
+  {name:'Sensor Poll',type:'eff',pri:'low',core:'E1',progress:60,color:'#2ecc8a'},
+  {name:'Logger',type:'eff',pri:'low',core:'E3',progress:45,color:'#7890b8'},
+  {name:'Compile Unit',type:'perf',pri:'med',core:'P2',progress:12,color:'#00d4ff'},
+  {name:'Network I/O',type:'eff',pri:'low',core:'E0',progress:78,color:'#2ecc8a'},
+  {name:'BG Backup',type:'eff',pri:'low',core:'E2',progress:33,color:'#7890b8'},
+];
+const logEntries=[];
+let uptime=272,schedMode=0,taskIdCounter=13;
+const schedModes=['Balanced','Performance','Power Saver','Thermal Guard'];
+const powerHistory=Array.from({length:40},(_,i)=>{const t=i/40;return 1.5+Math.sin(t*8)*0.6+Math.random()*0.3});
+const tempHistory={P0:[],P1:[],E0:[],E1:[]};
+let predictActual=Array.from({length:40},()=>Math.random()*80+10);
+let predictPred=predictActual.map((v,i)=>v+((Math.random()-0.5)*10));
+
+// ---- Helpers ----
+function pad(n){return String(n).padStart(2,'0')}
+function fmt(s){return `${pad(Math.floor(s/3600))}:${pad(Math.floor(s/60)%60)}:${pad(s%60)}`}
+function rnd(min,max){return min+Math.random()*(max-min)}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function tempColor(t){
+  if(t<45)return'#2ecc8a';
+  if(t<60)return'#f5a623';
+  if(t<75)return'#ff9a3c';
+  return'#ff5a5a';
+}
+
+// ---- Page nav ----
+function showPage(name,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(el)el.classList.add('active');
+  if(name==='dvfs')renderDVFS();
+  if(name==='thermal')renderThermal();
+  if(name==='cores')renderDetailedCores();
+  if(name==='scheduler')renderFullTasks();
+  if(name==='energy')renderEnergyBreakdown();
+}
+
+// ---- Log ----
+function addLog(type,msg){
+  const t=fmt(uptime);
+  logEntries.unshift({type,msg,t});
+  if(logEntries.length>100)logEntries.pop();
+  renderLogs();
+}
+function renderLogs(){
+  ['dashboard-log','full-log'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    const filt=document.getElementById('log-filter');
+    const filter=filt?filt.value:'all';
+    el.innerHTML=logEntries.filter(e=>filter==='all'||e.type===filter).slice(0,40).map(e=>{
+      const cls=e.type==='warn'?'log-warn':e.type==='ok'?'log-ok':'log-info';
+      return `<div class="log-entry"><span class="log-time">[${e.t}]</span><span class="${cls}">${e.msg}</span></div>`;
+    }).join('');
+  });
+}
+function filterLog(){renderLogs()}
+function clearLog(){logEntries.length=0;renderLogs()}
+function exportLog(){addLog('ok','Log exported to sched_log.txt')}
+
+// ---- Core grid (dashboard) ----
+function renderCoreGrid(){
+  const g=document.getElementById('core-grid');
+  if(!g)return;
+  g.innerHTML=cores.map(c=>{
+    const hotBadge=c.temp>72?'badge-hot':c.load>5?'badge-active':'badge-idle';
+    const hotTxt=c.temp>72?'HOT':c.load>5?'ACTIVE':'IDLE';
+    return`<div class="core-tile ${c.type}" title="Core ${c.id}: ${c.tasks.join(', ')||'idle'}">
+      <span class="core-badge ${hotBadge}">${hotTxt}</span>
+      <div class="core-tile-label"><span style="width:5px;height:5px;border-radius:50%;background:${c.type==='perf'?'var(--blue)':'var(--green)'};display:inline-block"></span>${c.id}</div>
+      <div class="core-tile-freq">${c.freq.toFixed(1)}</div>
+      <div class="core-tile-sub">GHz · ${c.temp}°C</div>
+      <div class="core-bar-bg"><div class="core-bar" style="width:${c.load}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+// ---- Detailed cores ----
+function renderDetailedCores(){
+  const g=document.getElementById('detailed-core-grid');
+  if(!g)return;
+  g.innerHTML=cores.map(c=>`
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <div style="width:32px;height:32px;border-radius:50%;border:2px solid ${c.type==='perf'?'var(--blue)':'var(--green)'};display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:11px;font-weight:700;color:${c.type==='perf'?'var(--blue)':'var(--green)'}">${c.id}</div>
+        <div><div style="font-size:12px;font-weight:600">${c.label} Core ${c.id}</div><div style="font-size:10px;color:var(--text2)">${c.tasks.length||'No'} task(s) assigned</div></div>
+        <div style="margin-left:auto"><span style="font-size:9px;padding:2px 6px;border-radius:3px;${c.temp>72?'background:rgba(255,90,90,.15);color:var(--red)':c.load>5?'background:rgba(46,204,138,.15);color:var(--green)':'background:var(--bg);color:var(--text3)'}">${c.temp>72?'THROTTLED':c.load>5?'ACTIVE':'IDLE'}</span></div>
+      </div>
+      <div class="metric-row"><span class="metric-key">Frequency</span><span class="metric-val" style="color:${c.type==='perf'?'var(--blue)':'var(--green)'}">${c.freq.toFixed(1)} GHz</span></div>
+      <div class="metric-row"><span class="metric-key">Load</span><span class="metric-val">${c.load}%</span></div>
+      <div class="metric-row"><span class="metric-key">Temp</span><span class="metric-val" style="color:${tempColor(c.temp)}">${c.temp}°C</span></div>
+      <div class="metric-row"><span class="metric-key">Voltage</span><span class="metric-val">${c.voltage.toFixed(2)} V</span></div>
+      <div class="metric-row" style="border:none"><span class="metric-key">Tasks</span><span class="metric-val" style="font-size:10px;color:var(--text2)">${c.tasks.join(', ')||'—'}</span></div>
+      <div class="core-bar-bg" style="height:6px;margin-top:4px"><div class="core-bar" style="width:${c.load}%"></div></div>
+    </div>
+  `).join('');
+}
+
+// ---- Task list ----
+function renderTaskList(){
+  const el=document.getElementById('task-list');
+  if(!el)return;
+  el.innerHTML=tasks.slice(0,6).map(t=>`
+    <div class="task-row">
+      <div class="task-type" style="background:${t.color}"></div>
+      <div class="task-name">${t.name}</div>
+      <div class="task-core" style="color:${t.core.startsWith('P')?'var(--blue)':'var(--green)'}">${t.core}</div>
+      <div class="task-pri pri-${t.pri}">${t.pri}</div>
+      <div class="task-bar-wrap"><div class="task-bar" style="width:${t.progress}%;background:${t.color}"></div></div>
+      <span style="font-size:10px;font-family:var(--font-mono);color:var(--text2);width:28px;text-align:right">${t.progress}%</span>
+    </div>
+  `).join('');
+}
+
+function renderFullTasks(){
+  const el=document.getElementById('full-task-list');
+  if(!el)return;
+  el.innerHTML=tasks.map((t,i)=>`
+    <div class="task-row">
+      <div class="task-type" style="background:${t.color}"></div>
+      <div class="task-name">${t.name}</div>
+      <div class="task-core" style="color:${t.core.startsWith('P')?'var(--blue)':'var(--green)'}">${t.core}</div>
+      <div class="task-pri pri-${t.pri}">${t.pri}</div>
+      <div class="task-bar-wrap" style="width:80px"><div class="task-bar" style="width:${t.progress}%;background:${t.color}"></div></div>
+      <span style="font-size:10px;font-family:var(--font-mono);color:var(--text2);width:28px">${t.progress}%</span>
+      <button class="btn" style="padding:2px 7px;font-size:10px" onclick="removeTask(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+// ---- DVFS ----
+function renderDVFS(){
+  const el=document.getElementById('dvfs-cores');
+  if(!el)return;
+  el.innerHTML=cores.map(c=>{
+    const pct=((c.freq-c.minFreq)/(c.maxFreq-c.minFreq)*100).toFixed(0);
+    return`<div class="dvfs-core">
+      <div class="dvfs-label">
+        <span style="color:${c.type==='perf'?'var(--blue)':'var(--green)'}">${c.id} (${c.label})</span>
+        <span style="font-family:var(--font-mono)">${c.freq.toFixed(1)} GHz · ${c.voltage.toFixed(2)}V · ${pct}%</span>
+      </div>
+      <div class="dvfs-track"><div class="dvfs-fill" style="width:${pct}%;background:${c.type==='perf'?'var(--blue)':'var(--green)'}"></div></div>
+      <input type="range" class="freq-slider" min="0" max="100" value="${pct}" oninput="setCoreFreq('${c.id}',this.value)" style="accent-color:${c.type==='perf'?'var(--blue)':'var(--green)'}">
+    </div>`;
+  }).join('');
+  drawVFChart();
+}
+function setCoreFreq(id,pct){
+  const c=cores.find(x=>x.id===id);
+  if(!c)return;
+  c.freq=+(c.minFreq+(pct/100)*(c.maxFreq-c.minFreq)).toFixed(1);
+  c.voltage=+(0.6+(pct/100)*0.45).toFixed(2);
+  addLog('info',`DVFS: ${id} → ${c.freq}GHz @ ${c.voltage}V`);
+  renderDVFS();
+}
+
+// ---- Thermal ----
+function renderThermal(){
+  const el=document.getElementById('thermal-grid');
+  if(!el)return;
+  el.innerHTML=cores.map(c=>{
+    const t=c.temp,col=tempColor(t);
+    const bg=t<45?'rgba(15,122,74,.25)':t<60?'rgba(90,75,0,.25)':t<75?'rgba(140,60,0,.25)':'rgba(100,15,15,.35)';
+    return`<div class="thermal-cell" style="background:${bg};border:1px solid ${col}40">
+      <div class="thermal-temp" style="color:${col}">${t}°</div>
+      <div class="thermal-label" style="color:${col}">${c.id}</div>
+    </div>`;
+  }).join('');
+  drawTempChart();
+}
+
+// ---- Energy ----
+function renderEnergyBreakdown(){
+  const el=document.getElementById('energy-breakdown');
+  if(!el)return;
+  const items=[
+    {label:'P-Cores',watts:1.8,color:'var(--blue)'},
+    {label:'E-Cores',watts:0.4,color:'var(--green)'},
+    {label:'Memory',watts:0.15,color:'var(--purple)'},
+    {label:'GPU',watts:0.05,color:'var(--amber)'},
+  ];
+  const total=items.reduce((s,i)=>s+i.watts,0);
+  el.innerHTML=items.map(i=>`
+    <div class="energy-bar-row">
+      <span class="energy-bar-label">${i.label}</span>
+      <div class="energy-bar-track"><div class="energy-bar-fill" style="width:${(i.watts/total*100).toFixed(0)}%;background:${i.color}">
+        <span class="energy-bar-num">${i.watts}W</span></div></div>
+    </div>
+  `).join('');
+}
+
+// ---- Canvas charts ----
+function drawPowerChart(){
+  const canvas=document.getElementById('power-chart');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const w=canvas.offsetWidth||360,h=80;
+  canvas.width=w;canvas.height=h;
+  ctx.clearRect(0,0,w,h);
+  const data=powerHistory.slice(-30);
+  const max=8,step=w/(data.length-1);
+  ctx.strokeStyle='#1a3a5a';ctx.lineWidth=1;ctx.setLineDash([2,3]);
+  [2,4,6].forEach(v=>{const y=h-v/max*h;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()});
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  data.forEach((v,i)=>{const x=i*step,y=h-v/max*h;i?ctx.lineTo(x,y):ctx.moveTo(x,y)});
+  ctx.strokeStyle='#4a9eff';ctx.lineWidth=2;ctx.stroke();
+  ctx.lineTo((data.length-1)*step,h);ctx.lineTo(0,h);
+  const grad=ctx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0,'rgba(74,158,255,0.3)');grad.addColorStop(1,'rgba(74,158,255,0)');
+  ctx.fillStyle=grad;ctx.fill();
+}
+
+function drawTempChart(){
+  const canvas=document.getElementById('temp-chart');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const w=canvas.offsetWidth||280,h=120;
+  canvas.width=w;canvas.height=h;
+  ctx.clearRect(0,0,w,h);
+  const colors=['#4a9eff','#2ecc8a','#f5a623','#ff5a5a'];
+  const keys=['P0','P1','E0','E1'];
+  const pts=20;
+  keys.forEach((k,ki)=>{
+    const arr=tempHistory[k];
+    if(arr.length<2)return;
+    const data=arr.slice(-pts);
+    const step=w/(pts-1);
+    ctx.beginPath();
+    data.forEach((v,i)=>{const x=i*step,y=h-((v-30)/60)*h;i?ctx.lineTo(x,y):ctx.moveTo(x,y)});
+    ctx.strokeStyle=colors[ki];ctx.lineWidth=1.5;ctx.setLineDash([]);ctx.stroke();
+  });
+}
+
+function drawVFChart(){
+  const canvas=document.getElementById('vf-chart');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const w=canvas.offsetWidth||260,h=130;
+  canvas.width=w;canvas.height=h;
+  ctx.clearRect(0,0,w,h);
+  const pts=20;
+  const freqs=Array.from({length:pts},(_,i)=>i/(pts-1));
+  const volts=freqs.map(f=>0.6+f*0.45);
+  const step=w/(pts-1);
+  ctx.beginPath();
+  freqs.forEach((_,i)=>{const x=i*step,y=h-(volts[i]-0.6)/0.5*h;i?ctx.lineTo(x,y):ctx.moveTo(x,y)});
+  ctx.strokeStyle='#9b6fff';ctx.lineWidth=2;ctx.stroke();
+  ctx.lineTo((pts-1)*step,h);ctx.lineTo(0,h);
+  const grad=ctx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0,'rgba(155,111,255,0.3)');grad.addColorStop(1,'rgba(155,111,255,0)');
+  ctx.fillStyle=grad;ctx.fill();
+  ctx.fillStyle='#c8d8f0';ctx.font='10px JetBrains Mono,monospace';
+  ctx.fillText('0.6V',4,h-4);ctx.fillText('1.05V',4,10);
+  ctx.fillText('min',4,h/2+4);ctx.fillText('freq →',w-48,h-4);
+}
+
+function drawPredictChart(){
+  const canvas=document.getElementById('predict-chart');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const w=canvas.offsetWidth||580,h=130;
+  canvas.width=w;canvas.height=h;
+  ctx.clearRect(0,0,w,h);
+  const act=predictActual.slice(-30),pred=predictPred.slice(-30);
+  const step=w/(act.length-1);
+  ctx.beginPath();
+  act.forEach((v,i)=>{const x=i*step,y=h-(v/100)*h;i?ctx.lineTo(x,y):ctx.moveTo(x,y)});
+  ctx.strokeStyle='#4a9eff';ctx.lineWidth=2;ctx.setLineDash([]);ctx.stroke();
+  ctx.beginPath();
+  pred.forEach((v,i)=>{const x=i*step,y=h-(clamp(v,0,100)/100)*h;i?ctx.lineTo(x,y):ctx.moveTo(x,y)});
+  ctx.strokeStyle='#9b6fff';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function drawEnergyChart(){
+  const canvas=document.getElementById('energy-chart');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const w=canvas.offsetWidth||260,h=130;
+  canvas.width=w;canvas.height=h;
+  ctx.clearRect(0,0,w,h);
+  const baseline=Array.from({length:20},(_,i)=>4+(i/20)*2.5);
+  const optimized=Array.from({length:20},(_,i)=>2+(i/20)*1.5);
+  const step=w/19;
+  [[baseline,'#ff5a5a'],[optimized,'#2ecc8a']].forEach(([data,color])=>{
+    ctx.beginPath();
+    data.forEach((v,i)=>{const x=i*step,y=h-(v/8)*h;i?ctx.lineTo(x,y):ctx.moveTo(x,y)});
+    ctx.strokeStyle=color;ctx.lineWidth=1.8;ctx.stroke();
+  });
+  ctx.fillStyle='#c8d8f0';ctx.font='10px JetBrains Mono,monospace';
+  ctx.fillStyle='#ff5a5a';ctx.fillText('Baseline',4,14);
+  ctx.fillStyle='#2ecc8a';ctx.fillText('Optimized',4,26);
+}
+
+function drawHealthGauge(){
+  const canvas=document.getElementById('health-gauge');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const w=180,h=90;
+  canvas.width=w;canvas.height=h;
+  ctx.clearRect(0,0,w,h);
+  const cx=90,cy=85,r=65,score=87;
+  ctx.beginPath();ctx.arc(cx,cy,r,Math.PI,2*Math.PI);
+  ctx.strokeStyle='#1a2030';ctx.lineWidth=12;ctx.stroke();
+  const angle=Math.PI+(score/100)*Math.PI;
+  ctx.beginPath();ctx.arc(cx,cy,r,Math.PI,angle);
+  const grad=ctx.createLinearGradient(cx-r,0,cx+r,0);
+  grad.addColorStop(0,'#ff5a5a');grad.addColorStop(0.5,'#f5a623');grad.addColorStop(1,'#2ecc8a');
+  ctx.strokeStyle=grad;ctx.lineWidth=12;ctx.lineCap='round';ctx.stroke();
+}
+
+function drawGanttChart(){
+  const canvas=document.getElementById('gantt-chart');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const w=canvas.offsetWidth||580,h=160;
+  canvas.width=w;canvas.height=h;
+  ctx.clearRect(0,0,w,h);
+  const rows=cores.slice(0,4);
+  const rowH=32,labelW=35,slots=20,slotW=(w-labelW)/slots;
+  rows.forEach((c,ri)=>{
+    const y=ri*rowH+8;
+    ctx.fillStyle='#4a5e80';ctx.font='9px JetBrains Mono,monospace';
+    ctx.fillText(c.id,2,y+12);
+    for(let s=0;s<slots;s++){
+      const hasTask=Math.random()<(c.load/100);
+      if(hasTask){
+        ctx.fillStyle=c.type==='perf'?'rgba(74,158,255,0.6)':'rgba(46,204,138,0.6)';
+        ctx.fillRect(labelW+s*slotW+1,y,slotW-2,24);
+      } else {
+        ctx.fillStyle='rgba(26,32,48,0.8)';
+        ctx.fillRect(labelW+s*slotW+1,y,slotW-2,24);
+      }
+    }
+  });
+  ctx.fillStyle='#2a3550';
+  for(let i=0;i<=slots;i++){ctx.fillRect(labelW+i*slotW,0,1,160)}
+}
+
+// ---- Controls ----
+function updatePolicy(){
+  const t=document.getElementById('pcoreThresh').value;
+  const d=document.getElementById('lbDelta').value;
+  const m=document.getElementById('migCost').value;
+  document.getElementById('pcoreThreshVal').textContent=t+'%';
+  document.getElementById('lbDeltaVal').textContent=d+'%';
+  document.getElementById('migCostVal').textContent=m+'ms';
+  document.getElementById('policy-thresh').textContent=t+'%';
+  document.getElementById('policy-delta').textContent=d+'%';
+}
+function updateThermal(){
+  ['warnTemp','throttleTemp','emerTemp'].forEach(id=>{document.getElementById(id+'Val').textContent=document.getElementById(id).value+'°C'});
+  document.getElementById('coolingBiasVal').textContent=document.getElementById('coolingBias').value+'%';
+}
+function updateEnergy(){
+  document.getElementById('rtiVal').textContent=document.getElementById('rti').value+'%';
+  document.getElementById('cstateVal').textContent='C'+document.getElementById('cstate').value;
+  document.getElementById('idleTimeoutVal').textContent=document.getElementById('idleTimeout').value+'ms';
+  document.getElementById('eeBiasVal').textContent=document.getElementById('eeBias').value+'%';
+}
+function updatePredict(){
+  document.getElementById('ewmaAlphaVal').textContent='0.'+document.getElementById('ewmaAlpha').value.padStart(2,'0');
+  document.getElementById('histWinVal').textContent=document.getElementById('histWin').value;
+  document.getElementById('heavyThreshVal').textContent=document.getElementById('heavyThresh').value+'%';
+  document.getElementById('medThreshVal').textContent=document.getElementById('medThresh').value+'%';
+}
+function changeGovernor(){
+  const g=document.getElementById('governor-select').value;
+  const map={ondemand:{s:'10 ms',u:'80%',d:'20%',steps:'8'},conservative:{s:'20 ms',u:'75%',d:'30%',steps:'6'},performance:{s:'—',u:'100%',d:'100%',steps:'1'},powersave:{s:'—',u:'0%',d:'0%',steps:'1'},schedutil:{s:'4 ms',u:'Auto',d:'Auto',steps:'16'}};
+  const m=map[g];
+  document.getElementById('gov-sample').textContent=m.s;
+  document.getElementById('gov-up').textContent=m.u;
+  document.getElementById('gov-down').textContent=m.d;
+  document.getElementById('gov-steps').textContent=m.steps;
+  addLog('info',`Governor → ${g}`);
+}
+
+function redistributeTasks(){
+  addLog('ok','Task redistribution: 3 tasks migrated to balance load');
+  cores.forEach(c=>{c.load=clamp(c.load+(Math.random()-0.5)*20,5,95)});
+  renderDetailedCores();
+}
+function toggleAllCores(){
+  addLog('info','Core power states toggled');
+}
+function throttleHotCores(){
+  const hot=cores.filter(c=>c.temp>65);
+  hot.forEach(c=>{c.freq=Math.max(c.minFreq,c.freq*0.7);c.load=Math.max(10,c.load-20)});
+  addLog('warn',`Throttled ${hot.length} hot core(s)`);
+  document.getElementById('throttle-status').textContent=hot.length?`${hot.length} core(s) throttled`:'None active';
+  renderDetailedCores();
+}
+function autoScale(){
+  cores.forEach(c=>{
+    const target=c.load/100;
+    c.freq=+(c.minFreq+target*(c.maxFreq-c.minFreq)).toFixed(1);
+    c.voltage=+(0.6+target*0.45).toFixed(2);
+  });
+  addLog('ok','DVFS auto-scale applied to all cores');
+  renderDVFS();
+}
+function setDVFSMode(m){
+  const modes={perf:{freq:1.0},balance:{freq:0.65},saver:{freq:0.3}};
+  const pct=modes[m].freq*100;
+  cores.forEach(c=>{c.freq=+(c.minFreq+modes[m].freq*(c.maxFreq-c.minFreq)).toFixed(1);c.voltage=+(0.6+modes[m].freq*0.45).toFixed(2)});
+  addLog('ok',`DVFS mode → ${m} (${pct.toFixed(0)}% freq)`);
+  renderDVFS();
+}
+
+function addTask(){
+  const names=['UI Render','Net Fetch','DB Query','BG Proc','File IO','Algo Sort','Image Proc','Audio Mix'];
+  const cores_list=['P0','P1','P2','E0','E1','E2'];
+  const pris=['low','med','high'];
+  tasks.push({name:names[Math.floor(Math.random()*names.length)]+' #'+taskIdCounter++,type:Math.random()>.5?'perf':'eff',pri:pris[Math.floor(Math.random()*3)],core:cores_list[Math.floor(Math.random()*cores_list.length)],progress:0,color:'#'+Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0')});
+  addLog('ok','New task added to queue');
+  renderFullTasks();
+  renderTaskList();
+}
+function removeTask(i){tasks.splice(i,1);renderFullTasks();renderTaskList();addLog('info','Task removed')}
+function clearTasks(){tasks.length=0;renderFullTasks();renderTaskList();addLog('warn','Task queue cleared')}
+function sortTasks(){tasks.sort((a,b)=>({high:0,med:1,low:2}[a.pri]-{high:0,med:1,low:2}[b.pri]));renderFullTasks();addLog('info','Tasks sorted by priority')}
+
+function runPrediction(){addLog('ok','Workload prediction updated (EWMA)');predictPred=predictActual.map(v=>v+(Math.random()-0.5)*8);drawPredictChart()}
+function trainModel(){addLog('ok','Model retrained on last 256 samples — accuracy 91.3%')}
+
+function emergencyCool(){cores.forEach(c=>{c.freq=c.minFreq;c.temp=Math.max(35,c.temp-20)});addLog('warn','EMERGENCY: All cores throttled to minimum');renderCoreGrid()}
+function boostPerf(){cores.forEach(c=>{if(c.type==='perf')c.freq=c.maxFreq});addLog('ok','Performance boost: P-cores at max freq');schedMode=1;document.getElementById('current-mode').textContent=schedModes[schedMode]}
+function maxSave(){cores.forEach(c=>{c.freq=c.minFreq});addLog('ok','Power saver: All cores at min freq');schedMode=2;document.getElementById('current-mode').textContent=schedModes[schedMode]}
+function resetSched(){schedMode=0;document.getElementById('current-mode').textContent=schedModes[0];addLog('ok','Scheduler reset to balanced mode')}
+function cycleMode(){schedMode=(schedMode+1)%schedModes.length;document.getElementById('current-mode').textContent=schedModes[schedMode];addLog('info','Scheduler mode → '+schedModes[schedMode])}
+
+function schedTab(el,tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ['queue','gantt','algo'].forEach(t=>{const d=document.getElementById('sched-'+t);if(d)d.style.display=t===tab?'block':'none'});
+  if(tab==='gantt')setTimeout(drawGanttChart,50);
+  if(tab==='queue')renderFullTasks();
+}
+
+// ---- Tick ----
+let tickCount=0;
+function tick(){
+  tickCount++;uptime++;
+  document.getElementById('uptime').textContent=fmt(uptime);
+  
+  // Mutate cores
+  cores.forEach(c=>{
+    c.load=clamp(c.load+(Math.random()-0.48)*6,3,98);
+    c.temp=clamp(c.temp+(Math.random()-0.48)*2,30,88);
+    if(c.type==='perf')c.freq=+(c.minFreq+(c.load/100)*(c.maxFreq-c.minFreq)+rnd(-0.1,0.1)).toFixed(1);
+    else c.freq=+(c.minFreq+(c.load/100)*(c.maxFreq-c.minFreq)+rnd(-0.05,0.05)).toFixed(1);
+    c.freq=clamp(c.freq,c.minFreq,c.maxFreq);
+    ['P0','P1','E0','E1'].forEach(k=>{if(!tempHistory[k])tempHistory[k]=[];});
+    if(tempHistory[c.id]!==undefined)tempHistory[c.id].push(c.temp);
+    if(tempHistory[c.id]&&tempHistory[c.id].length>40)tempHistory[c.id].shift();
+  });
+  
+  // Power history
+  const total=+(cores.reduce((s,c)=>{
+    const util=c.load/100;
+    const freqFrac=c.freq/c.maxFreq;
+    return s+(c.type==='perf'?freqFrac*freqFrac*2.5:freqFrac*freqFrac*0.8);
+  },0)).toFixed(1);
+  powerHistory.push(total);if(powerHistory.length>80)powerHistory.shift();
+  
+  // Task progress
+  tasks.forEach(t=>{t.progress=clamp(t.progress+(Math.random()*3-0.5),0,100)});
+  
+  // KPIs
+  const avgFreq=(cores.reduce((s,c)=>s+c.freq,0)/8).toFixed(1);
+  const avgTemp=Math.round(cores.reduce((s,c)=>s+c.temp,0)/8);
+  const pLoad=Math.round(cores.filter(c=>c.type==='perf').reduce((s,c)=>s+c.load,0)/4);
+  const eLoad=Math.round(cores.filter(c=>c.type==='eff').reduce((s,c)=>s+c.load,0)/4);
+  const pw=total.toFixed(1);
+  
+  document.getElementById('sys-power').textContent=pw+'W';
+  document.getElementById('kpi-freq').innerHTML=avgFreq+'<span style="font-size:12px">GHz</span>';
+  document.getElementById('kpi-power').innerHTML=pw+'<span style="font-size:12px">W</span>';
+  document.getElementById('kpi-temp').innerHTML=avgTemp+'<span style="font-size:12px">°C</span>';
+  document.getElementById('kpi-pload').innerHTML=pLoad+'<span style="font-size:12px">%</span>';
+  document.getElementById('kpi-eload').innerHTML=eLoad+'<span style="font-size:12px">%</span>';
+  
+  const pCoreW=(cores.filter(c=>c.type==='perf').reduce((s,c)=>s+(c.freq/c.maxFreq)**2*2.5,0)).toFixed(1);
+  const eCoreW=(cores.filter(c=>c.type==='eff').reduce((s,c)=>s+(c.freq/c.maxFreq)**2*0.8,0)).toFixed(1);
+  document.getElementById('pcore-w').textContent=pCoreW+'W';
+  document.getElementById('ecore-w').textContent=eCoreW+'W';
+  document.getElementById('total-w').textContent=(+pCoreW+ +eCoreW).toFixed(1)+'W';
+  document.getElementById('task-count').textContent=tasks.length;
+  document.getElementById('kpi-tasks').textContent=tasks.length;
+  
+  // Right panel
+  const p=cores[0],p1=cores[1],e=cores[4],e1=cores[5];
+  document.getElementById('rm-freq-p0').textContent=p.freq.toFixed(1)+' GHz';
+  document.getElementById('rm-freq-p1').textContent=p1.freq.toFixed(1)+' GHz';
+  document.getElementById('rm-freq-e0').textContent=e.freq.toFixed(1)+' GHz';
+  document.getElementById('rm-freq-e1').textContent=e1.freq.toFixed(1)+' GHz';
+  document.getElementById('rm-vp').textContent=p.voltage.toFixed(2)+' V';
+  document.getElementById('rm-ve').textContent=e.voltage.toFixed(2)+' V';
+  document.getElementById('rm-ipc').textContent=(1.5+Math.random()*0.6).toFixed(2);
+  document.getElementById('rm-cache').textContent=(4+Math.random()*5).toFixed(1)+'%';
+  
+  // Health score
+  const health=Math.round(100-avgTemp*0.3-+pw*3-eLoad*0.1);
+  const hScore=clamp(health,40,100);
+  document.getElementById('health-score').textContent=hScore;
+  
+  // Occasional logs
+  if(tickCount%12===0){
+    const msgs=[
+      ['info','Scheduler: task migrated to E-Core (load balanced)'],
+      ['ok','DVFS: P0 stepped down 0.2GHz (load dropped)'],
+      ['info','Workload predictor: Video task classified as Heavy'],
+      ['warn','Thermal: P2 approaching warn threshold ('+cores[2].temp+'°C)'],
+      ['ok','Power: 23% below baseline target'],
+      ['info','Task queue: BG Backup deferred (low priority)'],
+    ];
+    const m=msgs[Math.floor(Math.random()*msgs.length)];
+    addLog(m[0],m[1]);
+  }
+  
+  renderCoreGrid();
+  renderTaskList();
+  drawPowerChart();
+  
+  // Only redraw page-specific charts if visible
+  const activePage=document.querySelector('.page.active');
+  if(activePage){
+    const id=activePage.id;
+    if(id==='page-thermal')renderThermal();
+    if(id==='page-dvfs')renderDVFS();
+    if(id==='page-predict'){predictActual.push(Math.random()*80+10);if(predictActual.length>60)predictActual.shift();predictPred.push(predictActual[predictActual.length-1]+(Math.random()-0.5)*8);if(predictPred.length>60)predictPred.shift();drawPredictChart()}
+    if(id==='page-energy'){renderEnergyBreakdown();drawEnergyChart()}
+  }
+  drawHealthGauge();
+}
+
+// ---- Init ----
+['P0','P1','E0','E1'].forEach(k=>tempHistory[k]=cores.find(c=>c.id===k)?Array.from({length:20},()=>cores.find(c=>c.id===k).temp+(Math.random()-0.5)*5):[]);
+addLog('ok','PowerSched OS initialized — 8 cores active');
+addLog('info','DVFS governor: ondemand — sampling 10ms');
+addLog('info','Thermal guard active — warn:75°C throttle:82°C');
+addLog('ok','Workload predictor ready (EWMA α=0.25)');
+renderCoreGrid();
+renderTaskList();
+drawPowerChart();
+drawHealthGauge();
+drawEnergyChart();
+setInterval(tick,1000);
+window.addEventListener('resize',()=>{drawPowerChart();drawHealthGauge()});
+</script>
+</body>
+</html>
